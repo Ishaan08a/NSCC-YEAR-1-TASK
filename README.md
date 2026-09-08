@@ -3,7 +3,7 @@ A simple client-side signup form and user dashboard built with HTML, CSS, and Ja
 Signup & User Dashboard
 A simple front-end project built using HTML, CSS, and JavaScript.
 This project is a basic signup system where users can create an account by entering their username, email, and password. The entered details are validated and then displayed in a dashboard.
-The project also uses localStorage to save the registered users, so the data remains available even after refreshing the page.
+The project also uses localStorage to save the registered users, so the data remains available even after refreshing the page. \n
 The main idea behind this project was to understand how a signup form works and how JavaScript can be used to manage user data.
 It includes a signup form, input validation, local data storage, and a dashboard where registered users can be viewed and deleted.
 The project is completely front-end based and does not require any backend or database.
