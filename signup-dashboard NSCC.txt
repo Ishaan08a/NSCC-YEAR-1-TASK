@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Signup & User Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f5f7;
+    margin: 0;
+    padding: 40px 20px;
+    color: #1f2430;
+  }
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    margin-bottom: 28px;
+  }
+  .field {
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #374151;
+  }
+  input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+  }
+  input:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+  }
+  .error {
+    color: #dc2626;
+    font-size: 12px;
+    margin-top: 4px;
+    min-height: 14px;
+  }
+  button.submit {
+    width: 100%;
+    padding: 11px;
+    background: #4f46e5;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 4px;
+  }
+  button.submit:hover { background: #4338ca; }
+
+  .status {
+    font-size: 13px;
+    margin-top: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    display: none;
+  }
+  .status.success {
+    display: block;
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 8px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  th {
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .empty {
+    color: #9ca3af;
+    font-size: 13px;
+    padding: 16px 0;
+    text-align: center;
+  }
+  .delete-btn {
+    background: none;
+    border: 1px solid #fca5a5;
+    color: #dc2626;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .delete-btn:hover {
+    background: #fef2f2;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Create an account</h1>
+  <div class="subtitle">Sign up below — your entries are saved locally in this browser.</div>
+
+  <div class="card">
+    <form id="signupForm" novalidate>
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="e.g. jane_doe">
+        <div class="error" id="usernameError"></div>
+      </div>
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="text" id="email" placeholder="e.g. jane@example.com">
+        <div class="error" id="emailError"></div>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="At least 8 characters">
+        <div class="error" id="passwordError"></div>
+      </div>
+      <button type="submit" class="submit">Sign Up</button>
+      <div class="status" id="statusMsg"></div>
+    </form>
+  </div>
+
+  <h1>Dashboard</h1>
+  <div class="subtitle">Registered users</div>
+  <div class="card">
+    <div id="tableWrap"></div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'signupUsers';
+
+  const form = document.getElementById('signupForm');
+  const usernameInput = document.getElementById('username');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const statusMsg = document.getElementById('statusMsg');
+  const tableWrap = document.getElementById('tableWrap');
+
+  function getUsers() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  }
+
+  function clearErrors() {
+    document.getElementById('usernameError').textContent = '';
+    document.getElementById('emailError').textContent = '';
+    document.getElementById('passwordError').textContent = '';
+  }
+
+  function validate(username, email, password, existingUsers) {
+    let valid = true;
+
+    if (!username.trim()) {
+      document.getElementById('usernameError').textContent = 'Username is required.';
+      valid = false;
+    } else if (username.trim().length < 3) {
+      document.getElementById('usernameError').textContent = 'Username must be at least 3 characters.';
+      valid = false;
+    } else if (existingUsers.some(u => u.username.toLowerCase() === username.trim().toLowerCase())) {
+      document.getElementById('usernameError').textContent = 'That username is already taken.';
+      valid = false;
+    }
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      document.getElementById('emailError').textContent = 'Email is required.';
+      valid = false;
+    } else if (!emailPattern.test(email.trim())) {
+      document.getElementById('emailError').textContent = 'Enter a valid email address.';
+      valid = false;
+    } else if (existingUsers.some(u => u.email.toLowerCase() === email.trim().toLowerCase())) {
+      document.getElementById('emailError').textContent = 'That email is already registered.';
+      valid = false;
+    }
+
+    if (!password) {
+      document.getElementById('passwordError').textContent = 'Password is required.';
+      valid = false;
+    } else if (password.length < 8) {
+      document.getElementById('passwordError').textContent = 'Password must be at least 8 characters.';
+      valid = false;
+    } else if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      document.getElementById('passwordError').textContent = 'Password needs at least 1 uppercase letter and 1 number.';
+      valid = false;
+    }
+
+    return valid;
+  }
+
+  function renderTable() {
+    const users = getUsers();
+
+    if (users.length === 0) {
+      tableWrap.innerHTML = '<div class="empty">No users yet. Sign up above to add one.</div>';
+      return;
+    }
+
+    let html = '<table><thead><tr><th>Username</th><th>Email</th><th>Signed up</th><th></th></tr></thead><tbody>';
+    users.forEach((u, i) => {
+      html += `<tr>
+        <td>${escapeHtml(u.username)}</td>
+        <td>${escapeHtml(u.email)}</td>
+        <td>${escapeHtml(u.createdAt)}</td>
+        <td><button class="delete-btn" data-index="${i}">Delete</button></td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    tableWrap.innerHTML = html;
+
+    tableWrap.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.getAttribute('data-index'), 10);
+        const current = getUsers();
+        current.splice(idx, 1);
+        saveUsers(current);
+        renderTable();
+      });
+    });
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    clearErrors();
+    statusMsg.className = 'status';
+    statusMsg.textContent = '';
+
+    const username = usernameInput.value;
+    const email = emailInput.value;
+    const password = passwordInput.value;
+    const users = getUsers();
+
+    if (!validate(username, email, password, users)) {
+      return;
+    }
+
+    users.push({
+      username: username.trim(),
+      email: email.trim(),
+      password: password, // NOTE: plain-text storage — fine for a demo, never do this in a real app
+      createdAt: new Date().toLocaleString()
+    });
+
+    saveUsers(users);
+    form.reset();
+    statusMsg.textContent = 'Account created successfully!';
+    statusMsg.className = 'status success';
+    renderTable();
+  });
+
+  renderTable();
+</script>
+</body>
+</html>
