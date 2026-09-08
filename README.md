@@ -57,4 +57,4 @@ The stored data includes: Username, Email, Password, Registeration date and time
 Since the data is stored locally, it is only available in the browser where the project is being used.
 
 
-Code by:-Ishaan Adwitya Puggal
+Code by:-ISHAAN ADWITYA PUGGAL RA2611026010910
